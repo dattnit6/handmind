@@ -1,0 +1,694 @@
+openapi: 3.0.0
+info:
+  description: "Gpays Merchant Gateway Public API(domestic) Document\n\n
+  
+  **Using Public Key of G-PAY verify signature in response:** [Click here](https://drive.google.com/file/d/1rt3Hrw6loxqTlzwZQA0sIBvb3BUGZffr/view?usp=sharing)
+"
+  version: 3.0.0
+  title: Gpay Merchant Gateway Public API(domestic) Document
+  contact:
+    email: tuna@g-pay.vn
+servers:
+  - description: API DEV
+    url: https://payment.sandbox.g-pay.vn/api/v3
+tags:
+  - name: Merchant init order domestic Card
+    description: Merchant init order for domestic Card(ATM)
+  - name: Get order detail of GPAY
+    description: Get order detail GPAY
+paths:
+  '/authentication/token':
+    post:
+      tags: 
+        - Merchant init order domestic Card
+      summary: Merchant get token for authentication other API
+      description: Merchant get token for authentication other API
+      operationId: DomesticGetToken
+      responses:
+        '200':
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  response:
+                    $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+  '/order/init':
+    post:
+      tags:
+        - Merchant init order domestic Card
+      summary: Merchant init order for domestic Card
+      description: Merchant init order for domestic Card
+      operationId: DomesticInitOrder
+      security: 
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  response:
+                    $ref: '#/components/schemas/OrderInitResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitOrderRequest'
+      callbacks:
+        webhookEvent:
+          '$request.body#/webhook_url':
+            post:
+              requestBody:
+                $ref: '#/components/requestBodies/WebhookResult'
+              responses:
+                '200':
+                  description: OK
+        callbackEvent:
+          '$request.body#/callback_url':
+            get:
+              responses:
+                '200':
+                  description: OK
+              parameters:
+                - name: order_id
+                  in: query
+                  schema:
+                    type: string
+                  description: transaction id of merchant
+                - name: status
+                  in: query
+                  schema:
+                    type: string
+                    enum:
+                      - ORDER_PENDING
+                      - ORDER_PROCESSING
+                      - ORDER_SUCCESS
+                      - ORDER_FAILED
+                      - ORDER_CANCEL
+                      - ORDER_VERIFYING
+                    example: ORDER_SUCCESS
+                - name: gpay_trans_id
+                  in: query
+                  schema:
+                    type: string
+                  description: transaction id of GPAY
+                - name: token_info
+                  in: query
+                  schema:
+                    type: string
+                  description: |
+                    token info(data base64encode), example
+                    object: 
+                    {
+                      "id": 1234
+                      "bank_code": "GPVCCB",
+                      "card_number": "9704...."
+                    }
+                - name: embed_data
+                  in: query
+                  schema:
+                    type: string
+                  description: private data of transaction
+                - name: signature
+                  in: query
+                  schema:
+                    type: string
+                  description: |
+                    Verifies that the signature is correct for the specified data using the public key associated with public_key of GPAY.
+                    
+                    $ok = openssl_verify($data, base64_decode($signature), $public_key, OPENSSL_ALGO_SHA256);
+                    
+                    The data has the following structure: order_id={}&gpay_trans_id={}&status={}
+                    
+                    Example: order_id=1234567890&gpay_trans_id=GPOS123456789&status=ORDER_SUCCESS
+  '/order/detail':
+    post:
+      tags:
+        - Merchant init order domestic Card
+      summary: Get order detail of GPAY
+      description: Get order detail of GPAY
+      operationId: GetOrderDetail
+      responses:
+        '200':
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  response:
+                    $ref: '#/components/schemas/OrderDetailResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderDetailRequest'
+              
+  '/order/remove-token':
+    post:
+      tags:
+        - Remove token
+      summary: Remove token  of GPAY
+      description: Remove token of GPAY
+      operationId: RemoveToken
+      responses:
+        '200':
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  response:
+                    $ref: '#/components/schemas/RemoveTokenResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoveTokenRequest'
+  '/order/bank-list':
+    get:
+      tags:
+          - Get list bank
+      summary: get bank list
+      responses:
+        '200':
+          description: A successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  response:
+                    items:
+                      $ref: '#/components/schemas/BankDetailResponse'
+                    type: array
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+components:
+  requestBodies:
+      WebhookResult:
+        description: A JSON object containing order of gpay information
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookResultRequest'
+  schemas:
+    BadRequest:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 400
+            msg:
+              type: string
+              example: Bad request
+            internal_msg:
+              type: string
+              description: The message for developer
+        response:
+          type: string
+    NotFound:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 404
+            msg:
+              type: string
+              example: Not found
+            internal_msg:
+              type: string
+              description: The message for developer
+        response:
+          type: string
+    Meta:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: The result status code
+        msg:
+          type: string
+          description: The message for user
+        internal_msg:
+          type: string
+          description: The message for developer
+    InitOrderRequest:
+      type: object
+      required:
+        - merchant_code
+        - order_id
+        - order_amt
+        - order_currency
+        - order_time
+        - language
+        - payment_method
+        - payment_type
+        - embed_data
+        - callback_url
+        - webhook_url
+        - signature
+      properties:
+        merchant_code:
+          type: string
+          description: The code of merchant
+        order_id:
+          type: string
+          description: Merchant transaction id
+          maxLength: 50
+        order_amt:
+          type: number
+          description: amount of transaction
+        order_currency:
+          type: string
+          description: currency of transaction
+          default: VND
+          maxLength: 3
+        order_title:
+          type: string
+          description: title of transaction
+          maxLength: 256
+        order_description:
+          type: string
+          description: description of transaction  
+          maxLength: 512
+        order_time:
+          type: number
+          description: time create transaction(microtime) 
+        order_item:
+          items:
+            $ref: '#/components/schemas/OrderItemRequest'
+          type: array
+          description: items of transaction
+        bank_code:
+          type: string
+          description: bank code
+          maxLength: 20
+        customer_name:
+          type: string
+          description: name of customer
+          maxLength: 256
+        customer_id:
+          type: string
+          description: id of customer
+          maxLength: 256
+        email:
+          type: string
+          description: email of customer  
+          maxLength: 128
+        address:
+          type: string
+          description: address of customer 
+          maxLength: 256
+        phone:
+          type: string
+          description: phone of customer
+          maxLength: 20
+        language:
+          type: string
+          description: language for display
+          default: vi
+          maxLength: 2
+        service_code:
+          type: string
+          description: service of transaction
+          default: PAYMENTGATEWAY
+       
+        use_custom_domain:
+          type: boolean
+          description: Use custom domain for payment page if available
+          example: false
+        expired_order:
+          type: number
+          description: millisecond expired
+          default: 600000
+          minimum: 30000
+          maximum: 900000
+        voucher_info: 
+          type: string
+          description: voucher for order 
+        payment_method:
+          type: string
+          enum: 
+            - BANK_ATM
+            - PAY_BY_VOUCHER
+            - BUY_NOW_PAY_LATER
+            - PAY_BY_INSTALLMENT
+          default: BANK_ATM
+          description: method of payment
+        payment_type:
+          type: string
+          enum: 
+            - IMMEDIATE
+            - DELAYED
+          default: IMMEDIATE
+          description: type of payment
+        embed_data:
+          type: string
+          description: private data of transaction
+        token_id:
+          type: string
+          description: token for card of customer(by customer id)
+        callback_url:
+          type: string
+          description: url callback in case(success, fail, ...)
+        webhook_url:
+          type: string
+          description: HTTP push API(call in case success, expired, fail, ...)
+        signature:
+          type: string
+          description: |
+            The checksum is created by the formula: openssl_sign($input, $binary_signature, $privateKey, OPENSSL_ALGO_SHA256);
+            
+            $signature = base64_encode($binary_signature); The input has the following structure: merchant_code={}&order_id={}&order_amt={}. 
+            - merchant_code: The code of merchant
+            - order_id: Merchant transaction id
+            - order_amt: amount of transaction
+            
+            Example: merchant_code=MERCHANT_XYZ&order_id=12345678&order_amt=10000
+            
+    OrderInitResponse:
+      type: object
+      properties:
+        order_url:
+          type: string
+          description: url of order for redirect
+        gpay_trans_id:
+          type: string
+          description: transaction id of GPAY
+        signature:
+          type: string
+          description: |
+            Verifies that the signature is correct for the specified data using the public key associated with public_key of GPAY.
+            
+            $ok = openssl_verify($data, base64_decode($signature), $public_key, OPENSSL_ALGO_SHA256); 
+            
+            The data has the following structure: gpay_trans_id={}&order_id={}
+            
+            - gpay_trans_id: transaction id of GPAY;
+            - order_id: transaction id of Merchant
+            
+            Example: gpay_trans_id=GPOS1234567890&order_id=12345678
+            
+    OrderDetailResponse:
+      type: object
+      properties:
+        order_id:
+          type: string
+          description: transaction id of merchant
+        gpay_trans_id:
+          type: string
+          description: Transaction id of Gpay
+        order_status:
+          type: string
+          description: status of transaction of GPAY
+          enum:
+            - ORDER_PENDING
+            - ORDER_PROCESSING
+            - ORDER_SUCCESS
+            - ORDER_FAILED
+            - ORDER_CANCEL
+            - ORDER_VERIFYING
+        order_amt:
+          type: integer
+          description: amount of transaction
+        order_url:
+          type: string
+          description: url of order for redirect to payment-gateway
+        signature:
+          type: string
+          description: |
+            Verifies that the signature is correct for the specified data using the public key associated with public_key of GPAY.
+
+            $ok = openssl_verify($data, base64_decode($signature), $public_key, OPENSSL_ALGO_SHA256);
+
+            The data has the following structure: gpay_trans_id={}&order_id={}&order_amt={}&order_status={}
+            
+            - order_id: transaction id of merchant
+            - gpay_trans_id: transaction id of GPAY
+            - status: status of transaction GPAY
+            - order_amt: amount of transaction
+
+            Example: gpay_trans_id=GPOS1234567890&order_id=1234567&order_amt=100000&order_status=ORDER_SUCCESS
+            
+    WebhookResultRequest:
+      type: object
+      required:
+        - order_id
+        - gpay_trans_id
+        - status
+        - signature
+        - embed_data
+      properties:
+        order_id:
+          type: string
+          description: Merchant transaction id
+        gpay_trans_id:
+          type: string
+          description: Transaction if of GPAY
+        status:
+          type: string
+          enum:
+            - ORDER_PENDING
+            - ORDER_PROCESSING
+            - ORDER_SUCCESS
+            - ORDER_FAILED
+            - ORDER_CANCEL
+            - ORDER_VERIFYING
+          example: ORDER_SUCCESS
+          description: status of transaction
+        embed_data:
+          type: string
+          description: private data of transaction
+        token_info:
+          type: string 
+          description: |
+            token info(data base64encode), example:
+              object: 
+              {
+                "id": 1234
+                "bank_code": "GPVCCB",
+                "card_number": "9704...."
+              }
+        signature:
+          type: string
+          description: |
+            Verifies that the signature is correct for the specified data using the public key associated with public_key of GPAY.
+
+            $ok = openssl_verify($data, base64_decode($signature), $public_key, OPENSSL_ALGO_SHA256);
+
+            The data has the following structure: order_id={}&gpay_trans_id={}&status={}
+            
+            - order_id: transaction id of merchant
+            - gpay_trans_id: transaction id of GPAY
+            - status: status of transaction GPAY
+
+            Example: order_id=1234567&gpay_trans_id=GPOS1234567890&status=ORDER_SUCCESS
+    OrderDetailRequest:
+      type: object
+      required:
+        - merchant_code
+        - gpay_trans_id
+        - signature
+      properties:
+        merchant_code:
+          type: string
+          description: The code of merchant
+        gpay_trans_id:
+          type: string
+          description: transaction id of GPAY
+        signature:
+          type: string
+          description: |
+            The checksum is created by the formula: openssl_sign($input, $binary_signature, $privateKey, OPENSSL_ALGO_SHA256);
+            
+            $signature = base64_encode($binary_signature); The input has the following structure: merchant_code={}&gpay_trans_id={}
+            
+            Example: merchant_code=MERCHANT_XYZ&gpay_trans_id=GPOS123456789
+    RemoveTokenRequest:
+      type: object
+      required:
+        - merchant_code
+        - token_id
+        - signature
+      properties:
+        merchant_code:
+          type: string
+          description: The code of merchant
+        token_id:
+          type: string
+          description: token id of customer merchant
+        signature:
+          type: string
+          description: |
+            The checksum is created by the formula: openssl_sign($input, $binary_signature, $privateKey, OPENSSL_ALGO_SHA256);
+            
+            $signature = base64_encode($binary_signature); The input has the following structure: merchant_code={}&token_id={}
+            
+            Example: merchant_code=MERCHANT_XYZ&token_id=1234567
+    TokenRequest:
+      type: object
+      required:
+        - merchant_code
+        - password
+      properties:
+        merchant_code:
+          type: string
+          description: The code of merchant
+        password:
+          type: string
+          description: password of merchant
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: token for other API
+        expired_at: 
+          type: string
+          description: "expired time of token, format: 2006-01-02T15:04:05Z07:00"
+    BankDetailResponse:
+      type: object
+      properties:
+        bank_name:
+          type: string
+          description: name of bank
+        gpay_bank_code:
+          type: string
+          description: bank code of GPAY
+        short_name_by_napas:
+          type: string
+          description: short name of NAPAS
+        short_name_by_gpay:
+          type: string 
+          description: short name of GPAY
+        pub_lish_name:
+          type: string
+        bank_bin:
+          type: string
+        provider: 
+          type: string
+        status:
+          type: string
+        logo:
+          type: string
+          description: logo of bank
+    RemoveTokenResponse:
+      type: object
+      properties:
+        merchant_code:
+          type: string
+          description: token id of customer merchant
+        token_id: 
+          type: string
+          description: |
+            The checksum is created by the formula: openssl_sign($input, $binary_signature, $privateKey, OPENSSL_ALGO_SHA256);
+            
+            $signature = base64_encode($binary_signature); The input has the following structure: merchant_code={}&token_id={}
+            
+            Example: merchant_code=MERCHANT_XYZ&token_id=1234567
+    OrderItemRequest:
+      properties:
+        itemid:
+          type: string
+          description: id of item
+        itemname:
+          type: string
+          description: name of item
+        itemprice:
+          type: integer
+          description: price of item
+        itemquantity:
+          type: integer
+          description: price of item
+      type: object
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  # optional, for documentation purposes only
+security:
+  - bearerAuth: []
